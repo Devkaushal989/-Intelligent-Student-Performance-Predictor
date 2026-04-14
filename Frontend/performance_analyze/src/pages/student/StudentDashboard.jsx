@@ -1,0 +1,172 @@
+import { useEffect, useMemo, useState } from 'react';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import StatCard from '../../components/ui/StatCard';
+import TrendChart from '../../components/charts/TrendChart';
+import RecordTable from '../../components/tables/RecordTable';
+import Badge from '../../components/ui/Badge';
+import Card from '../../components/ui/Card';
+import DonutChart from '../../components/charts/DonutChart';
+import BarChart from '../../components/charts/BarChart';
+import RadarChart from '../../components/charts/RadarChart';
+import { studentService } from '../../services/studentService';
+
+function StudentDashboard() {
+  const [dashboard, setDashboard] = useState(null);
+  const [records, setRecords] = useState([]);
+
+  const chartData = useMemo(() => {
+    if (!dashboard?.trend) return [];
+    return dashboard.trend.map((item) => ({
+      label: new Date(item.date).toLocaleDateString(),
+      riskScore: item.riskScore,
+      examScore: item.examScore,
+    }));
+  }, [dashboard]);
+
+  const riskDistribution = useMemo(() => {
+    const base = { High: 0, Medium: 0, Low: 0 };
+    records.forEach((record) => {
+      const level = record?.prediction?.riskLevel || 'Low';
+      base[level] += 1;
+    });
+
+    return [
+      { name: 'High', value: base.High },
+      { name: 'Medium', value: base.Medium },
+      { name: 'Low', value: base.Low },
+    ];
+  }, [records]);
+
+  const subjectBars = useMemo(() => {
+    const map = new Map();
+    records.forEach((record) => {
+      const key = record.subject || 'Unknown';
+      const existing = map.get(key) || { subject: key, totalExam: 0, count: 0 };
+      existing.totalExam += record.examScore;
+      existing.count += 1;
+      map.set(key, existing);
+    });
+
+    return Array.from(map.values()).map((item) => ({
+      subject: item.subject,
+      examAverage: Number((item.totalExam / item.count).toFixed(2)),
+    }));
+  }, [records]);
+
+  const latestFactorRadar = useMemo(() => {
+    const latest = dashboard?.latestRecord;
+    if (!latest) return [];
+
+    return [
+      { subject: 'Attendance', score: latest.attendance },
+      { subject: 'Assignment', score: latest.assignmentScore },
+      { subject: 'Exam', score: latest.examScore },
+      { subject: 'Participation', score: latest.participationScore },
+      { subject: 'Behavior', score: latest.behaviorScore },
+    ];
+  }, [dashboard]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      const [dashboardRes, recordsRes] = await Promise.all([
+        studentService.dashboard(),
+        studentService.records(),
+      ]);
+
+      if (!isMounted) return;
+      setDashboard(dashboardRes.data.data);
+      setRecords(recordsRes.data.data.records);
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <DashboardLayout title="Student Progress Hub">
+      {!dashboard ? (
+        <div className="center-screen">Loading your performance insights...</div>
+      ) : (
+        <>
+          <section className="grid-4">
+            <StatCard label="Class" value={dashboard.student.className || 'N/A'} accent="blue" />
+            <StatCard
+              label="Latest Risk Score"
+              value={dashboard.latestPrediction ? dashboard.latestPrediction.riskScore.toFixed(1) : 'N/A'}
+              accent="amber"
+            />
+            <StatCard
+              label="Risk Level"
+              value={dashboard.latestPrediction ? dashboard.latestPrediction.riskLevel : 'N/A'}
+              accent="coral"
+            />
+            <StatCard label="Records" value={records.length} accent="teal" />
+          </section>
+
+          <section className="panel-card split-panel">
+            <div>
+              <h3>Explainable Prediction Insights</h3>
+              {dashboard.latestPrediction ? (
+                <>
+                  <p>
+                    Current risk status:{' '}
+                    <Badge variant={(dashboard.latestPrediction.riskLevel || 'low').toLowerCase()}>
+                      {dashboard.latestPrediction.riskLevel}
+                    </Badge>
+                  </p>
+                  <ul className="data-list compact">
+                    {dashboard.latestPrediction.explainableInsights.map((insight, idx) => (
+                      <li key={idx}>{insight}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>No prediction available yet.</p>
+              )}
+            </div>
+            <div>
+              <h3>Personalized Interventions</h3>
+              {dashboard.latestPrediction ? (
+                <ul className="data-list compact">
+                  {dashboard.latestPrediction.interventions.map((step, idx) => (
+                    <li key={idx}>{step}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No recommendations yet.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="two-col">
+            <Card title="My Risk Distribution">
+              <DonutChart data={riskDistribution} />
+            </Card>
+            <Card title="Subject-wise Exam Averages">
+              <BarChart data={subjectBars} xKey="subject" dataKey="examAverage" color="#4f46e5" />
+            </Card>
+          </section>
+
+          <section className="panel-card">
+            <h3 className="card-title">Latest Performance Factors</h3>
+            {latestFactorRadar.length > 0 ? (
+              <RadarChart data={latestFactorRadar} dataKey="score" nameKey="subject" color="#7c3aed" />
+            ) : (
+              <p className="muted-text">No latest factor data available yet.</p>
+            )}
+          </section>
+
+          <TrendChart data={chartData} title="My Risk & Exam Trend" />
+          <RecordTable rows={records} />
+        </>
+      )}
+    </DashboardLayout>
+  );
+}
+
+export default StudentDashboard;
