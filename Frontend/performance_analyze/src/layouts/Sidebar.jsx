@@ -32,34 +32,38 @@ function Sidebar({ user, navSections = [], onLogout }) {
         {navSections.map((section) => (
           <div key={section.section}>
             <div className="nav-section">{section.section}</div>
-            {section.items.map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                className={({ isActive }) => {
-                  if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/admin')) {
-                    return 'nav-item nav-item-active';
-                  }
+            {section.items.map((item) => {
+              const Icon = item.icon;
 
-                  if (!location.search && item.to.endsWith('?view=dashboard') && currentPath.startsWith('/student')) {
-                    return 'nav-item nav-item-active';
-                  }
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.to}
+                  className={({ isActive }) => {
+                    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/admin')) {
+                      return 'nav-item nav-item-active';
+                    }
 
-                  if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/teacher')) {
-                    return 'nav-item nav-item-active';
-                  }
+                    if (!location.search && item.to.endsWith('?view=dashboard') && currentPath.startsWith('/student')) {
+                      return 'nav-item nav-item-active';
+                    }
 
-                  if (item.to.includes('?view=')) {
-                    return currentPath === item.to ? 'nav-item nav-item-active' : 'nav-item';
-                  }
+                    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/teacher')) {
+                      return 'nav-item nav-item-active';
+                    }
 
-                  return isActive ? 'nav-item nav-item-active' : 'nav-item';
-                }}
-              >
-                <span className="nav-item-icon">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
+                    if (item.to.includes('?view=')) {
+                      return currentPath === item.to ? 'nav-item nav-item-active' : 'nav-item';
+                    }
+
+                    return isActive ? 'nav-item nav-item-active' : 'nav-item';
+                  }}
+                >
+                  <span className="nav-item-icon">{Icon ? <Icon size={15} aria-hidden="true" /> : null}</span>
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
       </nav>
