@@ -20,23 +20,23 @@ export const navByRole = {
     {
       section: 'Teaching',
       items: [
-        { to: '/teacher', label: 'My class', icon: '⊡' },
-        { to: '/teacher', label: 'Students', icon: '👨‍🎓' },
-        { to: '/teacher', label: 'Risk analysis', icon: '⚠️' },
+        { to: '/teacher?view=overview', label: 'My Class', icon: '⊡' },
+        { to: '/teacher?view=students', label: 'Students', icon: '👨‍🎓' },
+        { to: '/teacher?view=risk', label: 'Risk Analysis', icon: '⚠️' },
       ],
     },
     {
       section: 'Tools',
-      items: [{ to: '/teacher', label: 'Feedback', icon: '📝' }],
+      items: [{ to: '/teacher?view=feedback', label: 'Feedback', icon: '📝' }],
     },
   ],
   student: [
     {
       section: 'My panel',
       items: [
-        { to: '/student', label: 'Dashboard', icon: '⊡' },
-        { to: '/student', label: 'My progress', icon: '📈' },
-        { to: '/student', label: 'Study plan', icon: '🎯' },
+        { to: '/student?view=dashboard', label: 'Dashboard', icon: '⊡' },
+        { to: '/student?view=progress', label: 'My Progress', icon: '📈' },
+        { to: '/student?view=study-plan', label: 'Study Plan', icon: '🎯' },
       ],
     },
   ],

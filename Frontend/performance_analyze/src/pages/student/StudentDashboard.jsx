@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import StatCard from '../../components/ui/StatCard';
 import TrendChart from '../../components/charts/TrendChart';
@@ -11,6 +12,9 @@ import RadarChart from '../../components/charts/RadarChart';
 import { studentService } from '../../services/studentService';
 
 function StudentDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentView = searchParams.get('view') || 'dashboard';
+
   const [dashboard, setDashboard] = useState(null);
   const [records, setRecords] = useState([]);
 
@@ -93,6 +97,18 @@ function StudentDashboard() {
         <div className="center-screen">Loading your performance insights...</div>
       ) : (
         <>
+          <div className="tab-bar" style={{ marginBottom: '1rem' }}>
+            <button type="button" className={`tab ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'dashboard' })}>
+              Dashboard
+            </button>
+            <button type="button" className={`tab ${currentView === 'progress' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'progress' })}>
+              My Progress
+            </button>
+            <button type="button" className={`tab ${currentView === 'study-plan' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'study-plan' })}>
+              Study Plan
+            </button>
+          </div>
+
           <section className="grid-4">
             <StatCard label="Class" value={dashboard.student.className || 'N/A'} accent="blue" />
             <StatCard
@@ -108,61 +124,108 @@ function StudentDashboard() {
             <StatCard label="Records" value={records.length} accent="teal" />
           </section>
 
-          <section className="panel-card split-panel">
-            <div>
-              <h3>Explainable Prediction Insights</h3>
-              {dashboard.latestPrediction ? (
-                <>
-                  <p>
-                    Current risk status:{' '}
-                    <Badge variant={(dashboard.latestPrediction.riskLevel || 'low').toLowerCase()}>
-                      {dashboard.latestPrediction.riskLevel}
-                    </Badge>
-                  </p>
+          {(currentView === 'dashboard' || currentView === 'progress') && (
+            <section className="panel-card split-panel">
+              <div>
+                <h3>Explainable Prediction Insights</h3>
+                {dashboard.latestPrediction ? (
+                  <>
+                    <p>
+                      Current risk status:{' '}
+                      <Badge variant={(dashboard.latestPrediction.riskLevel || 'low').toLowerCase()}>
+                        {dashboard.latestPrediction.riskLevel}
+                      </Badge>
+                    </p>
+                    <ul className="data-list compact">
+                      {dashboard.latestPrediction.explainableInsights.map((insight, idx) => (
+                        <li key={idx}>{insight}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p>No prediction available yet.</p>
+                )}
+              </div>
+              <div>
+                <h3>Personalized Interventions</h3>
+                {dashboard.latestPrediction ? (
                   <ul className="data-list compact">
-                    {dashboard.latestPrediction.explainableInsights.map((insight, idx) => (
-                      <li key={idx}>{insight}</li>
+                    {dashboard.latestPrediction.interventions.map((step, idx) => (
+                      <li key={idx}>{step}</li>
                     ))}
                   </ul>
-                </>
-              ) : (
-                <p>No prediction available yet.</p>
-              )}
-            </div>
-            <div>
-              <h3>Personalized Interventions</h3>
-              {dashboard.latestPrediction ? (
-                <ul className="data-list compact">
-                  {dashboard.latestPrediction.interventions.map((step, idx) => (
-                    <li key={idx}>{step}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No recommendations yet.</p>
-              )}
-            </div>
-          </section>
+                ) : (
+                  <p>No recommendations yet.</p>
+                )}
+              </div>
+            </section>
+          )}
 
-          <section className="two-col">
-            <Card title="My Risk Distribution">
-              <DonutChart data={riskDistribution} />
-            </Card>
-            <Card title="Subject-wise Exam Averages">
-              <BarChart data={subjectBars} xKey="subject" dataKey="examAverage" color="#4f46e5" />
-            </Card>
-          </section>
+          {(currentView === 'dashboard' || currentView === 'study-plan') && (
+            <section className="panel-card split-panel">
+              <div>
+                <h3>Smart Attendance Planner</h3>
+                {dashboard.latestPrediction?.attendancePlanner ? (
+                  <ul className="data-list compact">
+                    <li>Current attendance: {dashboard.latestPrediction.attendancePlanner.currentAttendance}%</li>
+                    <li>Required additional classes: {dashboard.latestPrediction.attendancePlanner.requiredClasses}</li>
+                    <li>Projected attendance: {dashboard.latestPrediction.attendancePlanner.projectedAttendance}%</li>
+                    <li>Attend days: {dashboard.latestPrediction.attendancePlanner.attendDays.join(', ') || 'None'}</li>
+                    <li>Study-focused skip days: {dashboard.latestPrediction.attendancePlanner.skipDays.join(', ') || 'None'}</li>
+                  </ul>
+                ) : (
+                  <p className="muted-text">Attendance planner data not available yet.</p>
+                )}
+              </div>
 
-          <section className="panel-card">
-            <h3 className="card-title">Latest Performance Factors</h3>
-            {latestFactorRadar.length > 0 ? (
-              <RadarChart data={latestFactorRadar} dataKey="score" nameKey="subject" color="#7c3aed" />
-            ) : (
-              <p className="muted-text">No latest factor data available yet.</p>
-            )}
-          </section>
+              <div>
+                <h3>Target Score Predictor</h3>
+                {dashboard.latestPrediction?.targetScorePredictor ? (
+                  <ul className="data-list compact">
+                    <li>Low target (pass): {dashboard.latestPrediction.targetScorePredictor.low.requiredInFinal} in final</li>
+                    <li>Medium target: {dashboard.latestPrediction.targetScorePredictor.medium.requiredInFinal} in final</li>
+                    <li>High target: {dashboard.latestPrediction.targetScorePredictor.high.requiredInFinal} in final</li>
+                    <li>{dashboard.latestPrediction.targetScorePredictor.recommendation}</li>
+                  </ul>
+                ) : (
+                  <p className="muted-text">Target score prediction unavailable.</p>
+                )}
+              </div>
+            </section>
+          )}
 
-          <TrendChart data={chartData} title="My Risk & Exam Trend" />
-          <RecordTable rows={records} />
+          {dashboard.latestPrediction?.examShock?.detected && (
+            <section className="panel-card">
+              <h3 className="card-title">Exam Shock Alert</h3>
+              <p className="error-text">{dashboard.latestPrediction.examShock.explanation}</p>
+            </section>
+          )}
+
+          {(currentView === 'dashboard' || currentView === 'progress') && (
+            <>
+              <section className="two-col">
+                <Card title="My Risk Distribution">
+                  <DonutChart data={riskDistribution} />
+                </Card>
+                <Card title="Subject-wise Exam Averages">
+                  <BarChart data={subjectBars} xKey="subject" dataKey="examAverage" color="#4f46e5" />
+                </Card>
+              </section>
+
+              <section className="panel-card">
+                <h3 className="card-title">Latest Performance Factors</h3>
+                {latestFactorRadar.length > 0 ? (
+                  <RadarChart data={latestFactorRadar} dataKey="score" nameKey="subject" color="#7c3aed" />
+                ) : (
+                  <p className="muted-text">No latest factor data available yet.</p>
+                )}
+              </section>
+
+              <TrendChart data={chartData} title="My Risk & Exam Trend" />
+            </>
+          )}
+
+          {(currentView === 'progress' || currentView === 'study-plan') && <RecordTable rows={records} />}
         </>
       )}
     </DashboardLayout>

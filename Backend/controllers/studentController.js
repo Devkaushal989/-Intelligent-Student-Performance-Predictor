@@ -14,9 +14,12 @@ const getStudentDashboard = async (req, res, next) => {
       subject: item.subject,
       riskScore: item.prediction.riskScore,
       riskLevel: item.prediction.riskLevel,
+      category: item.prediction.category,
+      suggestedDifficulty: item.prediction.suggestedDifficulty,
       examScore: item.examScore,
       assignmentScore: item.assignmentScore,
       attendance: item.attendance,
+      examShockDetected: item.prediction?.examShock?.detected || false,
     }));
 
     return successResponse(res, 'Student dashboard fetched', {

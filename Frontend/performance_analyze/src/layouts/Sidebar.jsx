@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 
 function Sidebar({ user, navSections = [], onLogout }) {
   const location = useLocation();
+  const currentPath = `${location.pathname}${location.search}`;
 
   return (
     <aside className="sidebar">
@@ -36,13 +37,22 @@ function Sidebar({ user, navSections = [], onLogout }) {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) => {
-                  if (user.role === 'admin') {
-                    const current = `${location.pathname}${location.search}`;
-                    if (!location.search && item.to === '/admin?view=overview') {
-                      return 'nav-item nav-item-active';
-                    }
-                    return current === item.to ? 'nav-item nav-item-active' : 'nav-item';
+                  if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/admin')) {
+                    return 'nav-item nav-item-active';
                   }
+
+                  if (!location.search && item.to.endsWith('?view=dashboard') && currentPath.startsWith('/student')) {
+                    return 'nav-item nav-item-active';
+                  }
+
+                  if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/teacher')) {
+                    return 'nav-item nav-item-active';
+                  }
+
+                  if (item.to.includes('?view=')) {
+                    return currentPath === item.to ? 'nav-item nav-item-active' : 'nav-item';
+                  }
+
                   return isActive ? 'nav-item nav-item-active' : 'nav-item';
                 }}
               >

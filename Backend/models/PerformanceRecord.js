@@ -85,6 +85,91 @@ const performanceRecordSchema = new mongoose.Schema(
         enum: ['Low', 'Medium', 'High'],
         default: 'Low',
       },
+      category: {
+        type: String,
+        enum: ['Low', 'Average', 'Intelligent'],
+        default: 'Average',
+      },
+      suggestedDifficulty: {
+        type: String,
+        enum: ['Easy', 'Medium', 'Hard'],
+        default: 'Medium',
+      },
+      categorizationReason: {
+        type: String,
+        default: '',
+      },
+      examShock: {
+        detected: {
+          type: Boolean,
+          default: false,
+        },
+        startExamNumber: {
+          type: Number,
+          default: null,
+        },
+        explanation: {
+          type: String,
+          default: '',
+        },
+        dropMagnitude: {
+          type: Number,
+          default: 0,
+        },
+      },
+      attendancePlanner: {
+        currentAttendance: {
+          type: Number,
+          default: 0,
+        },
+        requiredClasses: {
+          type: Number,
+          default: 0,
+        },
+        projectedAttendance: {
+          type: Number,
+          default: 0,
+        },
+        attendDays: [Number],
+        skipDays: [Number],
+        recommendation: {
+          type: String,
+          default: '',
+        },
+      },
+      targetScorePredictor: {
+        currentInternalScore: {
+          type: Number,
+          default: 0,
+        },
+        internalMax: {
+          type: Number,
+          default: 40,
+        },
+        finalMax: {
+          type: Number,
+          default: 60,
+        },
+        low: {
+          targetTotal: Number,
+          requiredInFinal: Number,
+          achievable: Boolean,
+        },
+        medium: {
+          targetTotal: Number,
+          requiredInFinal: Number,
+          achievable: Boolean,
+        },
+        high: {
+          targetTotal: Number,
+          requiredInFinal: Number,
+          achievable: Boolean,
+        },
+        recommendation: {
+          type: String,
+          default: '',
+        },
+      },
       explainableInsights: [String],
       interventions: [String],
     },

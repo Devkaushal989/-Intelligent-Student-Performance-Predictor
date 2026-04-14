@@ -76,11 +76,11 @@ function AdminDashboard() {
 
   const classRiskData = useMemo(
     () =>
-      dashboard.classInsights.map((item) => ({
+      (dashboard?.classInsights || []).map((item) => ({
         className: item._id,
         riskScore: Number(item.averageRiskScore.toFixed(2)),
       })),
-    [dashboard.classInsights]
+    [dashboard]
   );
 
   const classStrengthData = useMemo(

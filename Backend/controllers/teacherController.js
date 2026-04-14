@@ -14,7 +14,9 @@ const getTeacherDashboard = async (req, res, next) => {
       .sort({ recordedAt: -1 });
 
     const highRiskStudents = new Set(
-      records.filter((item) => item.prediction.riskLevel === 'High').map((item) => String(item.student._id))
+      records
+        .filter((item) => item?.prediction?.riskLevel === 'High' && item?.student?._id)
+        .map((item) => String(item.student._id))
     );
 
     const classSummary = records.reduce(
@@ -108,6 +110,15 @@ const addOrUpdatePerformance = async (req, res, next) => {
       examScore,
       participationScore,
       behaviorScore,
+      examScores,
+      totalLectures,
+      daysToExam,
+      internalScore,
+      internalMax,
+      finalMax,
+      passTarget,
+      averageTarget,
+      highTarget,
       recordedAt,
     } = req.body;
 
@@ -128,6 +139,15 @@ const addOrUpdatePerformance = async (req, res, next) => {
       examScore,
       participationScore,
       behaviorScore,
+      examScores,
+      totalLectures,
+      daysToExam,
+      internalScore,
+      internalMax,
+      finalMax,
+      passTarget,
+      averageTarget,
+      highTarget,
     });
 
     const record = await PerformanceRecord.create({
