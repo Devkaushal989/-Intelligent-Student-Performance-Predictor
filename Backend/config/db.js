@@ -6,20 +6,7 @@ const RETRY_DELAY_MS = 4000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const buildMongoUri = () => {
-  const raw = process.env.MONGO_URI || DEFAULT_LOCAL_URI;
-  if (!raw.startsWith('mongodb+srv://')) {
-    return raw;
-  }
-
-  // Ensure Atlas URI has an explicit db name for predictable auth/db routing.
-  const afterHost = raw.split('.mongodb.net/')[1] || '';
-  if (!afterHost || afterHost.startsWith('?')) {
-    return raw.replace('.mongodb.net/', '.mongodb.net/student_performance_predictor');
-  }
-
-  return raw;
-};
+const buildMongoUri = () => process.env.MONGO_URI || DEFAULT_LOCAL_URI;
 
 const connectDB = async () => {
   const mongoUri = buildMongoUri();
@@ -34,7 +21,7 @@ const connectDB = async () => {
         family: 4,
       });
 
-      console.log(`MongoDB connected: ${conn.connection.host}`);
+      console.log(`MongoDB connected: ${conn.connection.host} (db: ${conn.connection.name})`);
       return conn;
     } catch (error) {
       console.error(`MongoDB connection error (attempt ${attempt}/${MAX_RETRIES}): ${error.message}`);

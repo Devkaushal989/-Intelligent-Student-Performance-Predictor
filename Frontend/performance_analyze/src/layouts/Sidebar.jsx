@@ -1,8 +1,29 @@
+import { motion } from 'framer-motion';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 function Sidebar({ user, navSections = [], onLogout }) {
   const location = useLocation();
   const currentPath = `${location.pathname}${location.search}`;
+
+  const isItemActive = (item, isActive) => {
+    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/admin')) {
+      return true;
+    }
+
+    if (!location.search && item.to.endsWith('?view=dashboard') && currentPath.startsWith('/student')) {
+      return true;
+    }
+
+    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/teacher')) {
+      return true;
+    }
+
+    if (item.to.includes('?view=')) {
+      return currentPath === item.to;
+    }
+
+    return isActive;
+  };
 
   return (
     <aside className="sidebar">
@@ -28,9 +49,17 @@ function Sidebar({ user, navSections = [], onLogout }) {
         </div>
       </div>
 
-      <nav className="sidebar-nav">
+      <motion.nav
+        className="sidebar-nav"
+        initial="hidden"
+        animate="show"
+        variants={{
+          hidden: {},
+          show: { transition: { staggerChildren: 0.06, delayChildren: 0.12 } },
+        }}
+      >
         {navSections.map((section) => (
-          <div key={section.section}>
+          <motion.div key={section.section} variants={{ hidden: { opacity: 0, x: -8 }, show: { opacity: 1, x: 0 } }}>
             <div className="nav-section">{section.section}</div>
             {section.items.map((item) => {
               const Icon = item.icon;
@@ -40,33 +69,27 @@ function Sidebar({ user, navSections = [], onLogout }) {
                   key={item.label}
                   to={item.to}
                   className={({ isActive }) => {
-                    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/admin')) {
-                      return 'nav-item nav-item-active';
-                    }
-
-                    if (!location.search && item.to.endsWith('?view=dashboard') && currentPath.startsWith('/student')) {
-                      return 'nav-item nav-item-active';
-                    }
-
-                    if (!location.search && item.to.endsWith('?view=overview') && currentPath.startsWith('/teacher')) {
-                      return 'nav-item nav-item-active';
-                    }
-
-                    if (item.to.includes('?view=')) {
-                      return currentPath === item.to ? 'nav-item nav-item-active' : 'nav-item';
-                    }
-
-                    return isActive ? 'nav-item nav-item-active' : 'nav-item';
+                    const active = isItemActive(item, isActive);
+                    return active ? 'nav-item nav-item-active' : 'nav-item';
                   }}
                 >
-                  <span className="nav-item-icon">{Icon ? <Icon size={15} aria-hidden="true" /> : null}</span>
-                  {item.label}
+                  {({ isActive }) => {
+                    const active = isItemActive(item, isActive);
+
+                    return (
+                      <>
+                        {active && <motion.span layoutId="sidebar-active-pill" className="nav-active-pill" transition={{ type: 'spring', stiffness: 320, damping: 30 }} />}
+                        <span className="nav-item-icon">{Icon ? <Icon size={15} aria-hidden="true" /> : null}</span>
+                        <span className="nav-item-text">{item.label}</span>
+                      </>
+                    );
+                  }}
                 </NavLink>
               );
             })}
-          </div>
+          </motion.div>
         ))}
-      </nav>
+      </motion.nav>
 
       <div className="sidebar-footer">
         <button type="button" className="btn-logout" onClick={onLogout}>

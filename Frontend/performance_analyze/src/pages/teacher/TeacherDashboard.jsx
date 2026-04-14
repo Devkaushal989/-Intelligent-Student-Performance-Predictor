@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
@@ -9,6 +10,8 @@ import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
 import RadarChart from '../../components/charts/RadarChart';
 import { teacherService } from '../../services/teacherService';
+import { MagneticButton } from '../../components/ui/motionPrimitives';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 const initialRecord = {
   subject: 'Mathematics',
@@ -217,23 +220,28 @@ function TeacherDashboard() {
     <DashboardLayout title="Teacher Intelligence Panel">
       {!dashboard ? (
         <div className="center-screen">
-          {loadError ? `Teacher dashboard error: ${loadError}` : 'Loading class dashboard...'}
+          {loadError ? (
+            `Teacher dashboard error: ${loadError}`
+          ) : (
+            <div style={{ width: '100%', maxWidth: 900 }}>
+              <TableSkeleton rows={7} />
+            </div>
+          )}
         </div>
       ) : (
         <>
           <div className="tab-bar" style={{ marginBottom: '1rem' }}>
-            <button type="button" className={`tab ${currentView === 'overview' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'overview' })}>
-              My Class
-            </button>
-            <button type="button" className={`tab ${currentView === 'students' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'students' })}>
-              Students
-            </button>
-            <button type="button" className={`tab ${currentView === 'risk' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'risk' })}>
-              Risk Analysis
-            </button>
-            <button type="button" className={`tab ${currentView === 'feedback' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'feedback' })}>
-              Feedback
-            </button>
+            {[
+              ['overview', 'My Class'],
+              ['students', 'Students'],
+              ['risk', 'Risk Analysis'],
+              ['feedback', 'Feedback'],
+            ].map(([key, label]) => (
+              <MagneticButton key={key} type="button" className={`tab motion-btn ${currentView === key ? 'active' : ''}`} onClick={() => setSearchParams({ view: key })}>
+                {currentView === key && <motion.span layoutId="panel-tab-active" className="tab-active-indicator" transition={{ type: 'spring', stiffness: 320, damping: 30 }} />}
+                <span className="tab-label">{label}</span>
+              </MagneticButton>
+            ))}
           </div>
 
           <section className="panel-card teacher-kpi-panel">
@@ -401,6 +409,50 @@ function TeacherDashboard() {
                   <p className="muted-text">
                     {latestRecord.prediction?.examShock?.explanation || 'No exam shock detected.'}
                   </p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {(currentView === 'risk' || currentView === 'overview') && latestRecord && (
+            <section className="panel-card split-panel">
+              <div>
+                <h3>Smart Attendance Planner</h3>
+                {latestRecord.prediction?.attendancePlanner ? (
+                  <ul className="data-list compact">
+                    <li>Current attendance: {latestRecord.prediction.attendancePlanner.currentAttendance}%</li>
+                    <li>Required classes to reach 75%: {latestRecord.prediction.attendancePlanner.requiredClasses}</li>
+                    <li>Projected attendance: {latestRecord.prediction.attendancePlanner.projectedAttendance}%</li>
+                    <li>
+                      Attend days: {latestRecord.prediction.attendancePlanner.attendDays?.join(', ') || 'No mandatory days'}
+                    </li>
+                    <li>
+                      Skip days for study: {latestRecord.prediction.attendancePlanner.skipDays?.join(', ') || 'No skip days suggested'}
+                    </li>
+                    <li>{latestRecord.prediction.attendancePlanner.recommendation}</li>
+                  </ul>
+                ) : (
+                  <p className="muted-text">Attendance planner data is not available for this record.</p>
+                )}
+              </div>
+
+              <div>
+                <h3>Target Score Predictor</h3>
+                {latestRecord.prediction?.targetScorePredictor ? (
+                  <ul className="data-list compact">
+                    <li>
+                      Low (Pass): {latestRecord.prediction.targetScorePredictor.low?.requiredInFinal ?? 'N/A'} in final exam
+                    </li>
+                    <li>
+                      Medium (Decent): {latestRecord.prediction.targetScorePredictor.medium?.requiredInFinal ?? 'N/A'} in final exam
+                    </li>
+                    <li>
+                      High (Excellent): {latestRecord.prediction.targetScorePredictor.high?.requiredInFinal ?? 'N/A'} in final exam
+                    </li>
+                    <li>{latestRecord.prediction.targetScorePredictor.recommendation}</li>
+                  </ul>
+                ) : (
+                  <p className="muted-text">Target score prediction data is not available for this record.</p>
                 )}
               </div>
             </section>

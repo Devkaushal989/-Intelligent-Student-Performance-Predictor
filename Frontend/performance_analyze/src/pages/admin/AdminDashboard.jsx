@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
@@ -8,6 +9,8 @@ import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
 import { adminService } from '../../services/adminService';
 import { exportToCsv } from '../../utils/exportCsv';
+import { MagneticButton } from '../../components/ui/motionPrimitives';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 const initialUserForm = {
   name: '',
@@ -232,7 +235,11 @@ function AdminDashboard() {
   if (!dashboard) {
     return (
       <DashboardLayout title="Admin Control Center">
-        <div className="center-screen">Loading admin analytics...</div>
+        <div className="center-screen">
+          <div style={{ width: '100%', maxWidth: 900 }}>
+            <TableSkeleton rows={7} />
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
@@ -240,21 +247,18 @@ function AdminDashboard() {
   return (
     <DashboardLayout title="Admin Control Center">
       <div className="tab-bar" style={{ marginBottom: '1rem' }}>
-        <button type="button" className={`tab ${currentView === 'overview' ? 'active' : ''}`} onClick={() => moveToView('overview')}>
-          Overview
-        </button>
-        <button type="button" className={`tab ${currentView === 'students' ? 'active' : ''}`} onClick={() => moveToView('students')}>
-          Students
-        </button>
-        <button type="button" className={`tab ${currentView === 'analytics' ? 'active' : ''}`} onClick={() => moveToView('analytics')}>
-          Analytics
-        </button>
-        <button type="button" className={`tab ${currentView === 'users' ? 'active' : ''}`} onClick={() => moveToView('users')}>
-          Users
-        </button>
-        <button type="button" className={`tab ${currentView === 'classes' ? 'active' : ''}`} onClick={() => moveToView('classes')}>
-          Classes
-        </button>
+        {[
+          ['overview', 'Overview'],
+          ['students', 'Students'],
+          ['analytics', 'Analytics'],
+          ['users', 'Users'],
+          ['classes', 'Classes'],
+        ].map(([key, label]) => (
+          <MagneticButton key={key} type="button" className={`tab motion-btn ${currentView === key ? 'active' : ''}`} onClick={() => moveToView(key)}>
+            {currentView === key && <motion.span layoutId="panel-tab-active" className="tab-active-indicator" transition={{ type: 'spring', stiffness: 320, damping: 30 }} />}
+            <span className="tab-label">{label}</span>
+          </MagneticButton>
+        ))}
       </div>
 
       <section className="grid-4">

@@ -4,6 +4,34 @@ const { generateToken } = require('../utils/token');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { predictRisk } = require('../services/predictionService');
 
+const isBcryptHash = (value = '') => /^\$2[aby]\$\d{2}\$/.test(value);
+
+const upsertDemoUser = async ({ name, email, password, role, className = null, assignedTeacher = null }) => {
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = new User({
+      name,
+      email,
+      password,
+      role,
+      className,
+      assignedTeacher,
+      isActive: true,
+    });
+  } else {
+    user.name = name;
+    user.role = role;
+    user.className = className;
+    user.assignedTeacher = assignedTeacher;
+    user.password = password;
+    user.isActive = true;
+  }
+
+  await user.save();
+  return user;
+};
+
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -17,7 +45,17 @@ const login = async (req, res, next) => {
       return errorResponse(res, 'Invalid credentials', 401);
     }
 
-    const isMatch = await user.matchPassword(password);
+    let isMatch = false;
+
+    if (isBcryptHash(user.password)) {
+      isMatch = await user.matchPassword(password);
+    } else if (user.password === password) {
+      // Backward compatibility: migrate legacy plain-text passwords to bcrypt on successful login.
+      user.password = password;
+      await user.save();
+      isMatch = true;
+    }
+
     if (!isMatch) {
       return errorResponse(res, 'Invalid credentials', 401);
     }
@@ -47,19 +85,14 @@ const me = async (req, res, next) => {
 
 const seedDemoData = async (req, res, next) => {
   try {
-    const existingAdmin = await User.findOne({ role: 'admin' });
-    if (existingAdmin) {
-      return errorResponse(res, 'Demo data already initialized', 400);
-    }
-
-    const admin = await User.create({
+    const admin = await upsertDemoUser({
       name: 'System Admin',
       email: 'admin@isp.edu',
       password: 'Admin@123',
       role: 'admin',
     });
 
-    const teacher = await User.create({
+    const teacher = await upsertDemoUser({
       name: 'Aarav Sharma',
       email: 'teacher@isp.edu',
       password: 'Teacher@123',
@@ -67,32 +100,37 @@ const seedDemoData = async (req, res, next) => {
       className: 'Class-10A',
     });
 
-    const students = await User.insertMany([
-      {
+    const students = [];
+    students.push(
+      await upsertDemoUser({
         name: 'Riya Verma',
         email: 'riya@student.edu',
         password: 'Student@123',
         role: 'student',
         className: 'Class-10A',
         assignedTeacher: teacher._id,
-      },
-      {
+      })
+    );
+    students.push(
+      await upsertDemoUser({
         name: 'Kabir Mehta',
         email: 'kabir@student.edu',
         password: 'Student@123',
         role: 'student',
         className: 'Class-10A',
         assignedTeacher: teacher._id,
-      },
-      {
+      })
+    );
+    students.push(
+      await upsertDemoUser({
         name: 'Anaya Singh',
         email: 'anaya@student.edu',
         password: 'Student@123',
         role: 'student',
         className: 'Class-10A',
         assignedTeacher: teacher._id,
-      },
-    ]);
+      })
+    );
 
     const baseRows = [
       {
@@ -146,9 +184,16 @@ const seedDemoData = async (req, res, next) => {
       }
     });
 
-    await PerformanceRecord.insertMany(records);
+    const existingDemoRecords = await PerformanceRecord.countDocuments({
+      teacher: teacher._id,
+      className: 'Class-10A',
+    });
 
-    return successResponse(res, 'Demo data seeded successfully', {
+    if (existingDemoRecords === 0) {
+      await PerformanceRecord.insertMany(records);
+    }
+
+    return successResponse(res, 'Demo credentials are ready', {
       credentials: {
         admin: { email: 'admin@isp.edu', password: 'Admin@123' },
         teacher: { email: 'teacher@isp.edu', password: 'Teacher@123' },
@@ -158,9 +203,9 @@ const seedDemoData = async (req, res, next) => {
         adminId: admin._id,
         teacherId: teacher._id,
         students: students.length,
-        performanceRecords: records.length,
+        performanceRecords: existingDemoRecords === 0 ? records.length : existingDemoRecords,
       },
-    }, 201);
+    }, 200);
   } catch (error) {
     next(error);
   }

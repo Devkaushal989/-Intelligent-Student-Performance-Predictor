@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
@@ -10,6 +11,8 @@ import DonutChart from '../../components/charts/DonutChart';
 import BarChart from '../../components/charts/BarChart';
 import RadarChart from '../../components/charts/RadarChart';
 import { studentService } from '../../services/studentService';
+import { MagneticButton } from '../../components/ui/motionPrimitives';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 function StudentDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -94,19 +97,24 @@ function StudentDashboard() {
   return (
     <DashboardLayout title="Student Progress Hub">
       {!dashboard ? (
-        <div className="center-screen">Loading your performance insights...</div>
+        <div className="center-screen">
+          <div style={{ width: '100%', maxWidth: 900 }}>
+            <TableSkeleton rows={7} />
+          </div>
+        </div>
       ) : (
         <>
           <div className="tab-bar" style={{ marginBottom: '1rem' }}>
-            <button type="button" className={`tab ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'dashboard' })}>
-              Dashboard
-            </button>
-            <button type="button" className={`tab ${currentView === 'progress' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'progress' })}>
-              My Progress
-            </button>
-            <button type="button" className={`tab ${currentView === 'study-plan' ? 'active' : ''}`} onClick={() => setSearchParams({ view: 'study-plan' })}>
-              Study Plan
-            </button>
+            {[
+              ['dashboard', 'Dashboard'],
+              ['progress', 'My Progress'],
+              ['study-plan', 'Study Plan'],
+            ].map(([key, label]) => (
+              <MagneticButton key={key} type="button" className={`tab motion-btn ${currentView === key ? 'active' : ''}`} onClick={() => setSearchParams({ view: key })}>
+                {currentView === key && <motion.span layoutId="panel-tab-active" className="tab-active-indicator" transition={{ type: 'spring', stiffness: 320, damping: 30 }} />}
+                <span className="tab-label">{label}</span>
+              </MagneticButton>
+            ))}
           </div>
 
           <section className="grid-4">

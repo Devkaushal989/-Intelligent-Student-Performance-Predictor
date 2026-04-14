@@ -1,8 +1,10 @@
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { navByRole } from './navConfig';
+import { pageVariants, staggerContainer } from '../components/ui/motionPrimitives';
 
 function DashboardLayout({ title, children }) {
   const { user, logout } = useAuth();
@@ -17,10 +19,18 @@ function DashboardLayout({ title, children }) {
     <div className="main-layout dashboard-shell">
       <Sidebar user={user} navSections={navByRole[user.role] || []} onLogout={handleLogout} />
 
-      <main className="content dashboard-main">
+      <motion.main
+        className="content dashboard-main"
+        variants={pageVariants}
+        initial="hidden"
+        animate="enter"
+        exit="exit"
+      >
         <Topbar title={title} user={user} />
-        <section className="page">{children}</section>
-      </main>
+        <motion.section className="page" variants={staggerContainer} initial="hidden" animate="show">
+          {children}
+        </motion.section>
+      </motion.main>
     </div>
   );
 }

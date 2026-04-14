@@ -35,6 +35,24 @@
   }
 }
 
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes shimmerBg {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 .login-screen {
   display: flex;
   align-items: center;
@@ -183,6 +201,8 @@
 }
 
 .role-tab {
+  position: relative;
+  overflow: hidden;
   padding: 8px 4px;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
@@ -193,6 +213,19 @@
   transition: all 0.2s ease;
   color: #475569;
   background: #fff;
+}
+
+.role-tab-indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+}
+
+.role-tab-label {
+  position: relative;
+  z-index: 1;
 }
 
 .role-tab.active {
@@ -413,6 +446,8 @@ select:focus,
 }
 
 .nav-item {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -426,6 +461,14 @@ select:focus,
   margin-bottom: 2px;
   border: 1px solid transparent;
   animation: slideInLeft 0.35s ease;
+}
+
+.nav-active-pill {
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  background: rgba(79, 70, 229, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .nav-item:hover {
@@ -443,12 +486,19 @@ select:focus,
 }
 
 .nav-item-icon {
+  position: relative;
+  z-index: 1;
   width: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-size: 14px;
+}
+
+.nav-item-text {
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-footer {
@@ -566,6 +616,8 @@ select:focus,
 }
 
 .tab {
+  position: relative;
+  overflow: hidden;
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -577,6 +629,19 @@ select:focus,
   background: transparent;
 }
 
+.tab-active-indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.tab-label {
+  position: relative;
+  z-index: 1;
+}
+
 .tab:hover {
   color: var(--accent);
   background: rgba(255, 255, 255, 0.6);
@@ -586,6 +651,14 @@ select:focus,
   background: white;
   color: var(--accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.motion-btn {
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.motion-btn:hover {
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.16);
 }
 
 .section-title {
@@ -1003,6 +1076,40 @@ select:focus,
 .identity-chip,
 .login-card {
   overflow: hidden;
+}
+
+.motion-shimmer {
+  position: relative;
+}
+
+.motion-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: shimmerSweep 1.8s ease 0.3s 1;
+  pointer-events: none;
+}
+
+.skeleton-header,
+.skeleton-row {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), rgba(226, 232, 240, 0.35), rgba(148, 163, 184, 0.15));
+  background-size: 200% 100%;
+  animation: shimmerBg 1.4s linear infinite;
+  border-radius: 10px;
+}
+
+.skeleton-header {
+  height: 26px;
+  margin-bottom: 14px;
+}
+
+.skeleton-row {
+  height: 42px;
+  margin-bottom: 10px;
 }
 
 .auth-card p,

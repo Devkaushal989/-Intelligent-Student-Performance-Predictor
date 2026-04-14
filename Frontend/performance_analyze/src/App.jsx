@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import useAuth from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/Login';
@@ -16,40 +17,44 @@ function HomeRedirect() {
 }
 
 function App() {
+  const location = useLocation();
+
   return (
-    <Routes>
-      <Route path="/" element={<HomeRedirect />} />
-      <Route path="/login" element={<LoginPage />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={`${location.pathname}${location.search}`}>
+        <Route path="/" element={<HomeRedirect />} />
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/teacher"
-        element={
-          <ProtectedRoute allowedRoles={['teacher']}>
-            <TeacherDashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/student"
-        element={
-          <ProtectedRoute allowedRoles={['student']}>
-            <StudentDashboard />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/student"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="*" element={<HomeRedirect />} />
-    </Routes>
+        <Route path="*" element={<HomeRedirect />} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 

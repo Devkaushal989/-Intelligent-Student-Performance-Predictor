@@ -41,8 +41,17 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+    });
+
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Stop the running process on this port or change PORT in Backend/.env.`);
+      } else {
+        console.error(`Server error: ${error.message}`);
+      }
+      process.exit(1);
     });
   } catch (error) {
     console.error(`Startup failed: ${error.message}`);

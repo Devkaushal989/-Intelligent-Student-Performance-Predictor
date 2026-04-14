@@ -1,7 +1,8 @@
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
 import useAuth from '../../hooks/useAuth';
+import { MagneticButton, TiltCard, staggerContainer, staggerItem } from '../../components/ui/motionPrimitives';
 
 const demoCreds = {
   admin: { email: 'admin@isp.edu', password: 'Admin@123' },
@@ -38,21 +39,6 @@ function LoginPage() {
     }
   };
 
-  const handleSeedDemo = async () => {
-    try {
-      setError('');
-      const { data } = await authService.seedDemo();
-      const creds = data.data.credentials;
-      setMessage(
-        `Demo ready: admin(${creds.admin.email}), teacher(${creds.teacher.email}), student(${creds.student.email})`
-      );
-      setRole('admin');
-      setForm({ email: creds.admin.email, password: creds.admin.password });
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Demo seed unavailable or already initialized.');
-    }
-  };
-
   const selectRole = (selectedRole) => {
     setRole(selectedRole);
     setForm({
@@ -64,8 +50,8 @@ function LoginPage() {
 
   return (
     <div className="login-screen">
-      <section className="login-shell">
-        <div className="login-showcase">
+      <motion.section className="login-shell" variants={staggerContainer} initial="hidden" animate="show">
+        <motion.div className="login-showcase" variants={staggerItem}>
           <div className="login-logo">
             <div className="logo-icon">IS</div>
             <div>
@@ -88,30 +74,22 @@ function LoginPage() {
             <span className="showcase-chip">Adaptive Learning</span>
             <span className="showcase-chip">Actionable Insights</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="login-card">
+        <TiltCard className="login-card motion-shimmer" variants={staggerItem}>
           <h2 className="card-title" style={{ marginBottom: 6 }}>Sign in</h2>
           <p className="login-sub" style={{ marginBottom: 14 }}>Choose a role and continue to your workspace.</p>
 
           <div className="role-tabs">
             {['admin', 'teacher', 'student'].map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={`role-tab ${role === item ? 'active' : ''}`}
-                onClick={() => selectRole(item)}
-              >
-                {item.charAt(0).toUpperCase() + item.slice(1)}
-              </button>
+              <MagneticButton key={item} type="button" className={`role-tab motion-btn ${role === item ? 'active' : ''}`} onClick={() => selectRole(item)}>
+                {role === item && <motion.span layoutId="login-role-active" className="role-tab-indicator" transition={{ type: 'spring', stiffness: 320, damping: 30 }} />}
+                <span className="role-tab-label">{item.charAt(0).toUpperCase() + item.slice(1)}</span>
+              </MagneticButton>
             ))}
           </div>
 
           <p className="login-sub">{message}</p>
-
-          <button type="button" className="btn-secondary" onClick={handleSeedDemo} style={{ width: '100%', marginBottom: '1rem' }}>
-            Seed Demo Data
-          </button>
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
@@ -144,14 +122,14 @@ function LoginPage() {
 
             {error && <p className="error-text">{error}</p>}
 
-            <button type="submit" className="btn-login" disabled={loading}>
+            <MagneticButton type="submit" className="btn-login motion-btn" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign in ->'}
-            </button>
+            </MagneticButton>
           </form>
 
           <p className="demo-hint">Use seeded credentials for a complete end-to-end walkthrough.</p>
-        </div>
-      </section>
+        </TiltCard>
+      </motion.section>
     </div>
   );
 }
